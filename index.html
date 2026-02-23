@@ -46,6 +46,9 @@
             padding: 20px;
             border-radius: 20px;
             border: 2.5px dashed var(--primary-pink);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         input, textarea {
@@ -58,11 +61,9 @@
             outline: none;
         }
 
-        /* Date အကွက် အဖြူရောင်ပေါ်စေရန် */
         input[type="date"] {
             background-color: white !important;
             color: #333 !important;
-            cursor: pointer;
         }
 
         button {
@@ -74,6 +75,28 @@
             cursor: pointer;
             font-weight: bold;
             transition: 0.3s;
+            margin-top: 5px;
+        }
+
+        .photo-box {
+            width: 150px;
+            height: 150px;
+            border: 2px solid #ffccd5;
+            border-radius: 15px;
+            margin-top: 10px;
+            overflow: hidden;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none; /* ပုံမရှိရင် ဖျောက်ထားမယ် */
         }
 
         .heart-counter {
@@ -87,24 +110,7 @@
 
         @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
-        .memory-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .polaroid {
-            background: white;
-            padding: 10px 10px 20px 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transform: rotate(-2deg);
-            margin-bottom: 10px;
-        }
-
-        .polaroid img { width: 100%; height: 140px; object-fit: cover; }
-
-        #dashboard, #gallery-section { display: none; }
+        #dashboard { display: none; }
     </style>
 </head>
 <body>
@@ -112,8 +118,7 @@
 <div class="container">
     <div id="login-section">
         <h2 style="color: var(--deep-red);">Forever Love Cloud</h2>
-        <input type="text" placeholder="Username">
-        <input type="password" id="pass" placeholder="Password">
+        <input type="password" id="pass" placeholder="Password (1234)">
         <button onclick="login()">Login</button>
     </div>
 
@@ -122,15 +127,26 @@
         <div class="couple-wrapper">
             <div class="card">
                 <h3>Him (Male)</h3>
-                <input type="text" id="him-name" placeholder="His Name" oninput="saveTextData()">
-                <input type="date" id="dateInput" onchange="calcDays(); saveTextData();">
-                <textarea id="him-note" placeholder="Note for her..." oninput="saveTextData()"></textarea>
+                <div class="photo-box" onclick="document.getElementById('imgIn1').click()">
+                    <span id="label1">Add Photo 📸</span>
+                    <img id="img1">
+                </div>
+                <input type="file" id="imgIn1" hidden accept="image/*" onchange="saveImg(this, 'img1', 'label1', 'savedImg1')">
+                <input type="text" id="him-name" placeholder="Name" oninput="saveTexts()">
+                <input type="date" id="dateInput" onchange="calcDays(); saveTexts();">
+                <textarea id="him-note" placeholder="Note for her..." oninput="saveTexts()"></textarea>
             </div>
+
             <div class="card">
                 <h3>Her (Female)</h3>
-                <input type="text" id="her-name" placeholder="Her Name" oninput="saveTextData()">
+                <div class="photo-box" onclick="document.getElementById('imgIn2').click()">
+                    <span id="label2">Add Photo 📸</span>
+                    <img id="img2">
+                </div>
+                <input type="file" id="imgIn2" hidden accept="image/*" onchange="saveImg(this, 'img2', 'label2', 'savedImg2')">
+                <input type="text" id="her-name" placeholder="Name" oninput="saveTexts()">
                 <input type="text" value="Anniversary Date" readonly style="background: white;">
-                <textarea id="her-note" placeholder="Note for him..." oninput="saveTextData()"></textarea>
+                <textarea id="her-note" placeholder="Note for him..." oninput="saveTexts()"></textarea>
             </div>
         </div>
 
@@ -138,21 +154,13 @@
             <div id="days" style="font-size: 2rem; font-weight: bold;">0</div>
             <div>Days</div>
         </div>
-        <button onclick="showGallery()">Love Sign ❤️</button>
-    </div>
-
-    <div id="gallery-section">
-        <h2>☁️ Our Precious Memories</h2>
-        <button onclick="document.getElementById('fileIn').click()">Add New Memory 📸</button>
-        <input type="file" id="fileIn" hidden multiple accept="image/*" onchange="handleUpload(this)">
-        <div id="memory-grid" class="memory-grid"></div>
-        <div style="margin-top: 20px;"><button onclick="showDashboard()">Back</button></div>
+        <button onclick="localStorage.clear(); location.reload();" style="background: gray; font-size: 10px;">Clear All Data</button>
     </div>
 </div>
 
 <script>
-    // စာမျက်နှာ စဖွင့်တာနဲ့ Browser ထဲမှာ သိမ်းထားတာ ရှိမရှိ စစ်မယ်
     window.onload = function() {
+        // စာသားများ ပြန်ဖော်ခြင်း
         if(localStorage.getItem("himName")) document.getElementById("him-name").value = localStorage.getItem("himName");
         if(localStorage.getItem("herName")) document.getElementById("her-name").value = localStorage.getItem("herName");
         if(localStorage.getItem("himNote")) document.getElementById("him-note").value = localStorage.getItem("himNote");
@@ -161,36 +169,25 @@
             document.getElementById("dateInput").value = localStorage.getItem("anniDate");
             calcDays();
         }
+
+        // ပုံများ ပြန်ဖော်ခြင်း
+        loadSavedImg('savedImg1', 'img1', 'label1');
+        loadSavedImg('savedImg2', 'img2', 'label2');
     };
 
-    // စာရိုက်တိုင်း သိမ်းမယ့် Function
-    function saveTextData() {
+    function login() {
+        if (document.getElementById('pass').value === "1234") {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        } else { alert("Password မှားနေပါတယ်!"); }
+    }
+
+    function saveTexts() {
         localStorage.setItem("himName", document.getElementById("him-name").value);
         localStorage.setItem("herName", document.getElementById("her-name").value);
         localStorage.setItem("himNote", document.getElementById("him-note").value);
         localStorage.setItem("herNote", document.getElementById("her-note").value);
         localStorage.setItem("anniDate", document.getElementById("dateInput").value);
-    }
-
-    // Login စစ်ဆေးမည့် Function
-    function login() {
-        const password = document.getElementById('pass').value;
-        if (password === "1234") { // Password 1234 မှန်မှ ဝင်ခွင့်ပြုမည်
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-        } else {
-            alert("Password မှားနေပါတယ်ခင်ဗျာ!");
-        }
-    }
-
-    function showDashboard() {
-        document.getElementById('gallery-section').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-    }
-
-    function showGallery() {
-        document.getElementById('dashboard').style.display = 'none';
-        document.getElementById('gallery-section').style.display = 'block';
     }
 
     function calcDays() {
@@ -200,19 +197,30 @@
         document.getElementById('days').innerText = diff > 0 ? diff : 0;
     }
 
-    function handleUpload(input) {
-        const grid = document.getElementById('memory-grid');
-        Array.from(input.files).forEach(file => {
+    // ပုံကို Browser ထဲ သိမ်းမည့် Function
+    function saveImg(input, imgId, labelId, storageKey) {
+        const file = input.files[0];
+        if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const caption = prompt("မှတ်တရစာလေး ရေးပါ...", "Sweet Memory");
-                const div = document.createElement('div');
-                div.className = 'polaroid';
-                div.innerHTML = `<img src="${e.target.result}"><p style="font-size:0.8rem; margin:5px 0;">${caption || 'Sweet Memory'}</p>`;
-                grid.appendChild(div);
-            }
+                const base64 = e.target.result;
+                localStorage.setItem(storageKey, base64);
+                displayImg(base64, imgId, labelId);
+            };
             reader.readAsDataURL(file);
-        });
+        }
+    }
+
+    function loadSavedImg(storageKey, imgId, labelId) {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) displayImg(saved, imgId, labelId);
+    }
+
+    function displayImg(src, imgId, labelId) {
+        const img = document.getElementById(imgId);
+        img.src = src;
+        img.style.display = "block";
+        document.getElementById(labelId).style.display = "none";
     }
 </script>
 </body>
