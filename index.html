@@ -178,6 +178,29 @@
         <button onclick="showGallery()">Love Sign ❤️</button>
     </div>
 
+    <div class="card">
+                <h3>Her (Female)</h3>
+                <input type="text" placeholder="Her Name">
+                <input type="text" value="Our Anniversary" readonly>
+                <textarea placeholder="Sweet Note for him..."></textarea>
+                
+                <div class="photo-upload-container" onclick="document.getElementById('imgInput2').click()">
+                    <span class="upload-placeholder" id="text2">Add Photo 📸</span>
+                    <img id="preview2" class="preview-img">
+                </div>
+                <input type="file" id="imgInput2" hidden accept="image/*" onchange="previewFile(this, 'preview2', 'text2')">
+            </div>
+        </div>
+
+    <div class="heart-counter">
+            <div class="days-num" id="result-days">0</div>
+            <div style="font-size: 0.9rem;">Days</div>
+        </div>
+
+        <p style="font-weight: bold; color: var(--deep-red);">Love you more than anything!</p>
+        <button onclick="showGallery()">Love Sign ❤️</button>
+    </div>
+
     <div id="gallery-section">
     <h2>☁️ Our Love Cloud</h2>
     <p>Every photo tells a story of us.</p>
